@@ -1,0 +1,85 @@
+LDAP Configuration
+
+ Business Central uses JBoss Security Domains defined in EAP_HOME/standalone/configuration/standalone/configuration/standalone.xml
+
+ To configure LDAP on your existing Red Hat JBoss BPM Suite installation:
+
+ 1. Define an LDAP security domain.
+
+ 	a. In standalone.xml, locate <system-properties>.
+ 		add below properties inside this:
+ 			<property name="org.uberfire.domain" value="ldap"/>
+	        <property name="org.jbpm.ht.callback" value="ldap"/>
+	        <property name="org.jbpm.ht.userinfo" value="ldap"/>
+
+	b. In standalone.xml, locate <security-domains>. 
+ 	c. Add your login module:
+			 		<security-domain name="ldap" cache-type="default">
+					  <authentication>					   
+					   <login-module code="org.jboss.security.auth.spi.LdapExtLoginModule" flag="required">
+						    <module-option name="java.naming.provider.url" value="ldap://10.10.10.10:389"/>
+						    <module-option name="java.naming.factory.initial" value="com.sun.jndi.ldap.LdapCtxFactory"/>
+						    <module-option name="java.naming.security.authentication" value="simple"/>
+						    <module-option name="bindDN" value="uid=admin,ou=system"/>
+						    <module-option name="bindCredential" value="secret"/>
+						    <module-option name="baseCtxDN" value="ou=People,dc=jboss,dc=org"/>
+						    <module-option name="baseFilter" value="(uid={0})"/>
+						    <module-option name="rolesCtxDN" value="ou=Groups,dc=jboss,dc=org"/>
+						    <module-option name="roleFilter" value="(member={0})"/>
+						    <module-option name="roleAttributeID" value="cn"/>
+						    <module-option name="roleNameAttributeID" value="cn"/>
+						    <module-option name="roleRecursion" value="2"/>
+						    <module-option name="roleAttributeIsDN" value="false"/>
+						    <module-option name="parseRoleNameFromDN" value="false"/>
+						    <module-option name="java.naming.referral" value="follow"/>
+						    <module-option name="searchScope" value="SUBTREE_SCOPE"/>
+					   </login-module>
+					  </authentication>
+					 </security-domain>
+
+					 it requires:
+					 ldap server url(ex - ldap://10.10.10.10:389)
+					 bindDN - (ex - id=admin,ou=system)
+					 bindCredential - (ex - secret)
+					 others values are ldaps additional attributes
+
+	d. Locate <hornetq-server> and add the following lines:
+
+					<security-domain>ldap</security-domain>
+					<security-enabled>true</security-enabled>
+
+	e. Refer to your LDAP security domain in jboss-web.xml:
+
+					<jboss-web>
+					    <security-domain>ldap</security-domain>
+					</jboss-web>
+
+
+
+2. If you require LDAP integration in task services, provide the task service configuration.
+
+	a. Open EAP_HOME/standalone/deployments/business-central.war/WEB-INF/beans.xml.
+			Change <class>org.jbpm.services.cdi.producer.JAASUserGroupInfoProducer</class> to <class>org.jbpm.services.cdi.producer.LDAPUserGroupInfoProducer</class>.
+	b. Create a jbpm.usergroup.callback.properties file in EAP_HOME/standalone/deployments/business-central.war/WEB-INF/classes/jbpm.usergroup.callback.properties and provide your usergroup callback properties, for example:
+					java.naming.provider.url=ldap://localhost:10389
+					ldap.bind.user=uid\=admin,ou\=system
+					ldap.bind.pwd=secret
+					ldap.user.ctx=ou\=People,dc\=jboss,dc\=org
+					ldap.role.ctx=ou\=Groups,dc\=jboss,dc\=org
+					ldap.user.roles.ctx=ou\=Groups,dc\=jboss,dc\=org
+					ldap.user.filter=(uid\={0})
+					ldap.role.filter=(cn\={0})
+					ldap.user.roles.filter=(member\={0})
+					ldap.search.scope=SUBTREE_SCOPE
+
+	c. Create a jbpm.user.info.properties file in EAP_HOME/standalone/deployments/business-central.war/WEB-INF/classes/jbpm.user.info.properties and provide your user info properties, for example:
+					java.naming.provider.url=ldap://localhost:10389
+					ldap.bind.user=uid\=admin,ou\=system
+					ldap.bind.pwd=secret
+					ldap.user.ctx=ou\=People,dc\=jboss,dc\=org
+					ldap.role.ctx=ou\=Groups,dc\=jboss,dc\=org
+					ldap.user.filter=(uid\={0})
+					ldap.role.filter=(cn\={0})
+					ldap.search.scope=SUBTREE_SCOPE
+
+
