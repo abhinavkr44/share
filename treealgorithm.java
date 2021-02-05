@@ -101,3 +101,15 @@ public class TreePaths {
             return getPaths0(head);
         }
     }
+    
+    
+     List<List<TreeNode>> lists = TreePaths.getPaths(nodes[0]);
+        for(List<TreeNode> list : lists) {
+            for(int count = 0; count < list.size(); count++) {
+                System.out.print(list.get(count).getId());
+                if(count != list.size() - 1) {
+                    System.out.print("-");
+                }
+            }
+            System.out.println();
+        }
